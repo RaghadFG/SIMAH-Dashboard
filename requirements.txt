@@ -12,4 +12,3 @@ tenacity==6.2.0
 python-dateutil
 dash-enterprise-auth
 dash-extensions
-
