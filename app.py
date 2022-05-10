@@ -116,7 +116,7 @@ def parse_contents(contents, filename, date):
 
 
     return html.Div([
-        html.H5(filename),
+       #html.H5(filename),
        # html.H6(datetime.datetime.fromtimestamp(date)),
 
         dash_table.DataTable(
@@ -126,12 +126,12 @@ def parse_contents(contents, filename, date):
 
         html.Hr(),  # horizontal line
 
-        # For debugging, display the raw contents provided by the web browser
-        html.Div('Raw Content'),
-        html.Pre(contents[0:200] + '...', style={
-            'whiteSpace': 'pre-wrap',
-            'wordBreak': 'break-all'
-        })
+        # # For debugging, display the raw contents provided by the web browser
+        # html.Div('Raw Content'),
+        # html.Pre(contents[0:200] + '...', style={
+        #     'whiteSpace': 'pre-wrap',
+        #     'wordBreak': 'break-all'
+        # })
     ])
 
 
