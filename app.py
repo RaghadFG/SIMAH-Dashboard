@@ -87,32 +87,75 @@ def parse_contents(contents, filename, date):
             'There was an error processing this file.'
         ])
 
-    if ( df['LastAmountPaid'] == 0).any() & (df['LastPaymentDate'] !='').any():
-                return html.Div([
-                'Error: LastAmountPaid = 0 while valid LastPaymentDate is provided! Please try uploading the file again'
-                    ])
+    error_data = {
+    "AccountNumber": [None],
+    "Error": [None]
+    }
 
-    # if ( df['LastAmountPaid'] == 0).any() & (!(df['LastPaymentDate'].isna())).any():
+    #load data into a DataFrame object:
+    erorr_df = pd.DataFrame(error_data)
+    for i,row in df.iterrows():
+        if (row['LastAmountPaid'] == 0) & (row['LastPaymentDate']!=''):
+            erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
+            erorr_df.at[i,'Error'] = '*LastAmountPaid = 0 while valid LastPaymentDate is provided'
+        
+        if (row['PastDueBalance']>row['CurrentBalance']):
+            erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
+            erorr_df.at[i,'Error'] = 'PastDueBalance > OutStanding'
+
+        if  (row['PaymentStatus'] == 1) & (row['PastDueBalance']<= 0):
+            erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
+            erorr_df.at[i,'Error'] = 'PaymentStatus is 1 while PastDueBalance is not > 0'
+        
+        if (row['LastAmountPaid'] != 0) & (row['LastPaymentDate']==''):
+            erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
+            erorr_df.at[i,'Error'] = '***LastPaymentDate is not provided while there is an amount paid!'
+
+        
+#
+            return html.Div([
+        
+        html.H5('Ops fix the errors then try uploading the file again'),
+        html.H6('Error Table'),
+     
+
+        dash_table.DataTable(
+            data=erorr_df.to_dict('records'),
+            columns=[{'name': i, 'id': i} for i in erorr_df.columns]
+        ),
+
+        html.Hr(),  # horizontal line
+
+        # # For debugging, display the raw contents provided by the web browser
+        # html.Div('Raw Content'),
+        # html.Pre(contents[0:200] + '...', style={
+        #     'whiteSpace': 'pre-wrap',
+        #     'wordBreak': 'break-all'
+        # })
+    ])
+
+
+
+        # if ( df['LastAmountPaid'] == 0).any() & (df['LastPaymentDate'] !='').any():
+        #             return html.Div([
+        #             'Error: LastAmountPaid = 0 while valid LastPaymentDate is provided! Please try uploading the file again'
+        #                 ])
+
+    
+    # if ( df['LastAmountPaid'] != 0).any() & (df['LastPaymentDate'].isna()).any():
     #             return html.Div([
-    #             'Error: LastAmountPaid = 0 while valid LastPaymentDate is provided! Please try uploading the file again'
+    #             'Error: LastPaymentDate is not provided while there is an amount paid! Please try uploading the file again'
     #                 ])
     
-
+    # if (df['PastDueBalance']>df['CurrentBalance']).any():
+    #             return html.Div([
+    #             'Error: PastDueBalance > OutStanding, Please try uploading the file again'
+    #                 ])
     
-    if ( df['LastAmountPaid'] != 0).any() & (df['LastPaymentDate'].isna()).any():
-                return html.Div([
-                'Error: LastPaymentDate is not provided while there is an amount paid! Please try uploading the file again'
-                    ])
-    
-    if (df['PastDueBalance']>df['CurrentBalance']).any():
-                return html.Div([
-                'Error: PastDueBalance > OutStanding, Please try uploading the file again'
-                    ])
-    
-    if ( df['PaymentStatus'] == 1).any() & (df['PastDueBalance']<= 0).any():
-                return html.Div([
-                'Error: PaymentStatus is 1 while PastDueBalance is not > 0, Please try uploading the file again'
-                    ])
+    # if ( df['PaymentStatus'] == 1).any() & (df['PastDueBalance']<= 0).any():
+    #             return html.Div([
+    #             'Error: PaymentStatus is 1 while PastDueBalance is not > 0, Please try uploading the file again'
+    #                 ])
 
 
     return html.Div([
