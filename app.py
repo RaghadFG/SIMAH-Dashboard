@@ -110,7 +110,6 @@ def parse_contents(contents, filename, date):
             #1st error in AccountNumber
             if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
                 erorr_df.at[i,'Error'] = 'Error:  LastAmountPaid = 0 while valid LastPaymentDate is provided'
-                print(type(erorr_df.at[i,'Error']))
             #more than one error in the same AccountNumber
             else:
                 erorr_df.at[i,'Error'] = 'Error:  LastAmountPaid = 0 while valid LastPaymentDate is provided'+' | '+str(erorr_df.at[i,'Error'])
@@ -122,7 +121,6 @@ def parse_contents(contents, filename, date):
             #1st error in AccountNumber
             if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
                 erorr_df.at[i,'Error'] = 'Error: LastPaymentDate is not provided while there is amount paid'
-                print(type(erorr_df.at[i,'Error']))
             #more than one error in the same AccountNumber
             else:
                 erorr_df.at[i,'Error'] = 'Error: LastPaymentDate is not provided while there is amount paid'+' | '+str(erorr_df.at[i,'Error'])
@@ -134,7 +132,6 @@ def parse_contents(contents, filename, date):
             #1st error in AccountNumber
             if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
                 erorr_df.at[i,'Error'] = 'Error:  PastDueBalance > OutStanding'
-                print(type(erorr_df.at[i,'Error']))
             #more than one error in the same AccountNumber
             else:
                 erorr_df.at[i,'Error'] = 'Error:  PastDueBalance > OutStanding'+' | '+str(erorr_df.at[i,'Error'])
@@ -146,7 +143,6 @@ def parse_contents(contents, filename, date):
             #1st error in AccountNumber
             if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
                 erorr_df.at[i,'Error'] = 'Error:  PaymentStatus is 1 while PastDueBalance is not > 0'
-                print(type(erorr_df.at[i,'Error']))
             #more than one error in the same AccountNumber
             else:
                 erorr_df.at[i,'Error'] = 'Error:  PaymentStatus is 1 while PastDueBalance is not > 0'+" | "+str(erorr_df.at[i,'Error'])       
