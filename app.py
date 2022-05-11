@@ -6,6 +6,7 @@ from dash.dependencies import Input, Output
 import plotly.express as px
 import base64
 from datetime import datetime
+import math
 import io
 import theme
 import dash
@@ -61,7 +62,7 @@ app.layout = ddk.App([
     html.Div(id='output-data-upload'),
 
    
-         html.Button("Download Text", id="btn-download-txt"),
+         html.Button("Download File", id="btn-download-txt"),
          dcc.Download(id="download-text")
     
 ])
@@ -87,37 +88,63 @@ def parse_contents(contents, filename, date):
             'There was an error processing this file.'
         ])
 
+    result = df.dtypes
+
+    #print(result)
     error_data = {
     "AccountNumber": [None],
     "Error": [None]
     }
 
     #load data into a DataFrame object:
+    global erorr_df
     erorr_df = pd.DataFrame(error_data)
+    global Flag 
+    Flag = False
     for i,row in df.iterrows():
-        if (row['LastAmountPaid'] == 0) & (row['LastPaymentDate']!=''):
+        if (row['LastAmountPaid'] == 0) and (row['LastPaymentDate']!=''):
+            Flag=True
             erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
-            erorr_df.at[i,'Error'] = '*LastAmountPaid = 0 while valid LastPaymentDate is provided'
-        
-        if (row['PastDueBalance']>row['CurrentBalance']):
-            erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
-            erorr_df.at[i,'Error'] = 'PastDueBalance > OutStanding'
+            if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
+                erorr_df.at[i,'Error'] = 'Error:  LastAmountPaid = 0 while valid LastPaymentDate is provided'
+                print(type(erorr_df.at[i,'Error']))
+            else:
+                erorr_df.at[i,'Error'] = 'Error:  LastAmountPaid = 0 while valid LastPaymentDate is provided'+' | '+str(erorr_df.at[i,'Error'])
 
-        if  (row['PaymentStatus'] == 1) & (row['PastDueBalance']<= 0):
+        if (row['LastAmountPaid'] != 0) and (row['LastPaymentDate']==''):
+            Flag=True
             erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
-            erorr_df.at[i,'Error'] = 'PaymentStatus is 1 while PastDueBalance is not > 0'
-        
-        if (row['LastAmountPaid'] != 0) & (row['LastPaymentDate']==''):
-            erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
-            erorr_df.at[i,'Error'] = '***LastPaymentDate is not provided while there is an amount paid!'
+            if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
+                erorr_df.at[i,'Error'] = 'Error: LastPaymentDate is not provided while there is amount paid'
+                print(type(erorr_df.at[i,'Error']))
+            else:
+                erorr_df.at[i,'Error'] = 'Error: LastPaymentDate is not provided while there is amount paid'+' | '+str(erorr_df.at[i,'Error'])
+
 
         
-#
-            return html.Div([
+        if row['PastDueBalance']>row['CurrentBalance']:
+            Flag=True
+            erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
+            if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
+                erorr_df.at[i,'Error'] = 'Error:  PastDueBalance > OutStanding'
+                print(type(erorr_df.at[i,'Error']))
+            else:
+                erorr_df.at[i,'Error'] = 'Error:  PastDueBalance > OutStanding'+' | '+str(erorr_df.at[i,'Error'])
+
+        if  (row['PaymentStatus'] == 1) and (row['PastDueBalance']<= 0):
+            Flag=True
+            erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
+            if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
+                erorr_df.at[i,'Error'] = 'Error:  PaymentStatus is 1 while PastDueBalance is not > 0'
+                print(type(erorr_df.at[i,'Error']))
+            else:
+                erorr_df.at[i,'Error'] = 'Error:  PaymentStatus is 1 while PastDueBalance is not > 0'+" | "+str(erorr_df.at[i,'Error'])        
+    if Flag:
+        return html.Div([
         
         html.H5('Ops fix the errors then try uploading the file again'),
         html.H6('Error Table'),
-     
+    
 
         dash_table.DataTable(
             data=erorr_df.to_dict('records'),
@@ -132,7 +159,7 @@ def parse_contents(contents, filename, date):
         #     'whiteSpace': 'pre-wrap',
         #     'wordBreak': 'break-all'
         # })
-    ])
+            ])
 
 
 
@@ -160,7 +187,7 @@ def parse_contents(contents, filename, date):
 
     return html.Div([
        #html.H5(filename),
-       # html.H6(datetime.datetime.fromtimestamp(date)),
+       #html.H6(datetime.datetime.fromtimestamp(date)),
 
         dash_table.DataTable(
             data=df.to_dict('records'),
@@ -197,11 +224,11 @@ def update_output(list_of_contents, list_of_names, list_of_dates):
     prevent_initial_call=True,
 )
 def func(n_clicks):
-    return dict(content="not yet", filename=Fname)
+    if Flag:
+        return dcc.send_data_frame(erorr_df.to_csv, "Error-table.csv")
 
+    return dict(content='not yet', filename=Fname)
 
-
-####
 
 if __name__ == '__main__':
     app.run_server(debug=True)
