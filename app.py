@@ -109,10 +109,10 @@ def parse_contents(contents, filename, date):
             erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
             #1st error in AccountNumber
             if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
-                erorr_df.at[i,'Error'] = 'Error:  LastAmountPaid = 0 while valid LastPaymentDate is provided'
+                erorr_df.at[i,'Error'] = 'Error: LastAmountPaid = 0 while valid LastPaymentDate is provided'
             #more than one error in the same AccountNumber
             else:
-                erorr_df.at[i,'Error'] = 'Error:  LastAmountPaid = 0 while valid LastPaymentDate is provided'+' | '+str(erorr_df.at[i,'Error'])
+                erorr_df.at[i,'Error'] = 'Error: LastAmountPaid = 0 while valid LastPaymentDate is provided'+' | '+str(erorr_df.at[i,'Error'])
 
         #check 2st rule
         if (row['LastAmountPaid'] != 0) and (row['LastPaymentDate']==''):
