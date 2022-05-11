@@ -68,9 +68,21 @@ app.layout = ddk.App([
 ])
  ])])
 def parse_contents(contents, filename, date):
-    content_type, content_string = contents.split(',')
+    global erorr_df,Flag
 
+    error_data = {
+    "AccountNumber": [None],
+    "Error": [None]
+    }
+
+    erorr_df = pd.DataFrame(error_data)
+    Flag = False
+
+    content_type, content_string = contents.split(',')
     decoded = base64.b64decode(content_string)
+    
+
+
     try:
         if 'csv' in filename:
             # Assume that the user uploaded a CSV file
@@ -88,58 +100,61 @@ def parse_contents(contents, filename, date):
             'There was an error processing this file.'
         ])
 
-    result = df.dtypes
-
-    #print(result)
-    error_data = {
-    "AccountNumber": [None],
-    "Error": [None]
-    }
-
-    #load data into a DataFrame object:
-    global erorr_df
-    erorr_df = pd.DataFrame(error_data)
-    global Flag 
-    Flag = False
+    #Check validation rules
     for i,row in df.iterrows():
+        
+        #check 1st rule
         if (row['LastAmountPaid'] == 0) and (row['LastPaymentDate']!=''):
             Flag=True
             erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
+            #1st error in AccountNumber
             if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
                 erorr_df.at[i,'Error'] = 'Error:  LastAmountPaid = 0 while valid LastPaymentDate is provided'
                 print(type(erorr_df.at[i,'Error']))
+            #more than one error in the same AccountNumber
             else:
                 erorr_df.at[i,'Error'] = 'Error:  LastAmountPaid = 0 while valid LastPaymentDate is provided'+' | '+str(erorr_df.at[i,'Error'])
 
+        #check 2st rule
         if (row['LastAmountPaid'] != 0) and (row['LastPaymentDate']==''):
             Flag=True
             erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
+            #1st error in AccountNumber
             if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
                 erorr_df.at[i,'Error'] = 'Error: LastPaymentDate is not provided while there is amount paid'
                 print(type(erorr_df.at[i,'Error']))
+            #more than one error in the same AccountNumber
             else:
                 erorr_df.at[i,'Error'] = 'Error: LastPaymentDate is not provided while there is amount paid'+' | '+str(erorr_df.at[i,'Error'])
-
-
         
+        #check 3st rule
         if row['PastDueBalance']>row['CurrentBalance']:
             Flag=True
             erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
+            #1st error in AccountNumber
             if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
                 erorr_df.at[i,'Error'] = 'Error:  PastDueBalance > OutStanding'
                 print(type(erorr_df.at[i,'Error']))
+            #more than one error in the same AccountNumber
             else:
                 erorr_df.at[i,'Error'] = 'Error:  PastDueBalance > OutStanding'+' | '+str(erorr_df.at[i,'Error'])
 
+        #check 4st rule
         if  (row['PaymentStatus'] == 1) and (row['PastDueBalance']<= 0):
             Flag=True
             erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
+            #1st error in AccountNumber
             if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
                 erorr_df.at[i,'Error'] = 'Error:  PaymentStatus is 1 while PastDueBalance is not > 0'
                 print(type(erorr_df.at[i,'Error']))
+            #more than one error in the same AccountNumber
             else:
-                erorr_df.at[i,'Error'] = 'Error:  PaymentStatus is 1 while PastDueBalance is not > 0'+" | "+str(erorr_df.at[i,'Error'])        
+                erorr_df.at[i,'Error'] = 'Error:  PaymentStatus is 1 while PastDueBalance is not > 0'+" | "+str(erorr_df.at[i,'Error'])       
+
+
+    #the uploaded file has errors
     if Flag:
+        #show the errors
         return html.Div([
         
         html.H5('Ops fix the errors then try uploading the file again'),
@@ -151,57 +166,18 @@ def parse_contents(contents, filename, date):
             columns=[{'name': i, 'id': i} for i in erorr_df.columns]
         ),
 
-        html.Hr(),  # horizontal line
-
-        # # For debugging, display the raw contents provided by the web browser
-        # html.Div('Raw Content'),
-        # html.Pre(contents[0:200] + '...', style={
-        #     'whiteSpace': 'pre-wrap',
-        #     'wordBreak': 'break-all'
-        # })
+        html.Hr(), 
             ])
-
-
-
-        # if ( df['LastAmountPaid'] == 0).any() & (df['LastPaymentDate'] !='').any():
-        #             return html.Div([
-        #             'Error: LastAmountPaid = 0 while valid LastPaymentDate is provided! Please try uploading the file again'
-        #                 ])
-
-    
-    # if ( df['LastAmountPaid'] != 0).any() & (df['LastPaymentDate'].isna()).any():
-    #             return html.Div([
-    #             'Error: LastPaymentDate is not provided while there is an amount paid! Please try uploading the file again'
-    #                 ])
-    
-    # if (df['PastDueBalance']>df['CurrentBalance']).any():
-    #             return html.Div([
-    #             'Error: PastDueBalance > OutStanding, Please try uploading the file again'
-    #                 ])
-    
-    # if ( df['PaymentStatus'] == 1).any() & (df['PastDueBalance']<= 0).any():
-    #             return html.Div([
-    #             'Error: PaymentStatus is 1 while PastDueBalance is not > 0, Please try uploading the file again'
-    #                 ])
-
-
+    else:
+    #show the uploaded file 
     return html.Div([
-       #html.H5(filename),
-       #html.H6(datetime.datetime.fromtimestamp(date)),
 
         dash_table.DataTable(
             data=df.to_dict('records'),
             columns=[{'name': i, 'id': i} for i in df.columns]
         ),
 
-        html.Hr(),  # horizontal line
-
-        # # For debugging, display the raw contents provided by the web browser
-        # html.Div('Raw Content'),
-        # html.Pre(contents[0:200] + '...', style={
-        #     'whiteSpace': 'pre-wrap',
-        #     'wordBreak': 'break-all'
-        # })
+        html.Hr(),  
     ])
 
 
@@ -224,9 +200,11 @@ def update_output(list_of_contents, list_of_names, list_of_dates):
     prevent_initial_call=True,
 )
 def func(n_clicks):
+    #download the errors in the uploaded file 
     if Flag:
         return dcc.send_data_frame(erorr_df.to_csv, "Error-table.csv")
 
+    #download txt file ... not yet
     return dict(content='not yet', filename=Fname)
 
 
