@@ -168,17 +168,18 @@ def parse_contents(contents, filename, date):
 
         html.Hr(), 
             ])
+
+    #show the uploaded file
     else:
-    #show the uploaded file 
-    return html.Div([
+        return html.Div([
 
-        dash_table.DataTable(
-            data=df.to_dict('records'),
-            columns=[{'name': i, 'id': i} for i in df.columns]
-        ),
+            dash_table.DataTable(
+                data=df.to_dict('records'),
+                columns=[{'name': i, 'id': i} for i in df.columns]
+            ),
 
-        html.Hr(),  
-    ])
+            html.Hr(),  
+        ])
 
 
 @app.callback(Output('output-data-upload', 'children'),
