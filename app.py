@@ -131,10 +131,10 @@ def parse_contents(contents, filename, date):
             erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
             #1st error in AccountNumber
             if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
-                erorr_df.at[i,'Error'] = 'Error:  PastDueBalance > OutStanding'
+                erorr_df.at[i,'Error'] = 'Error: PastDueBalance > OutStanding'
             #more than one error in the same AccountNumber
             else:
-                erorr_df.at[i,'Error'] = 'Error:  PastDueBalance > OutStanding'+' | '+str(erorr_df.at[i,'Error'])
+                erorr_df.at[i,'Error'] = 'Error: PastDueBalance > OutStanding'+' | '+str(erorr_df.at[i,'Error'])
 
         #check 4st rule
         if  (row['PaymentStatus'] == 1) and (row['PastDueBalance']<= 0):
@@ -142,10 +142,10 @@ def parse_contents(contents, filename, date):
             erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
             #1st error in AccountNumber
             if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
-                erorr_df.at[i,'Error'] = 'Error:  PaymentStatus is 1 while PastDueBalance is not > 0'
+                erorr_df.at[i,'Error'] = 'Error: PaymentStatus is 1 while PastDueBalance is not > 0'
             #more than one error in the same AccountNumber
             else:
-                erorr_df.at[i,'Error'] = 'Error:  PaymentStatus is 1 while PastDueBalance is not > 0'+" | "+str(erorr_df.at[i,'Error'])       
+                erorr_df.at[i,'Error'] = 'Error: PaymentStatus is 1 while PastDueBalance is not > 0'+" | "+str(erorr_df.at[i,'Error'])       
 
 
     #the uploaded file has errors
