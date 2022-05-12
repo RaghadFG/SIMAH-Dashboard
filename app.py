@@ -252,4 +252,6 @@ with open('ALLM_COMM_20220440.txt','w',encoding="utf-8") as f:
     f.write(''.join('\n999'+str(i).zfill(10)))
     f.close()
 
-    '''
+    
+
+    dddd'''
