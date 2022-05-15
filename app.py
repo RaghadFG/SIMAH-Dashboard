@@ -181,6 +181,7 @@ def parse_contents(contents, filename, date):
 
     #clients_df=pd.read_excel('ClientDetails.xlsx', index_col=0)
     #full_df
+    #new branch test
 
 
 @app.callback(Output('output-data-upload', 'children'),
