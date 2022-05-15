@@ -99,7 +99,7 @@ def parse_contents(contents, filename, date):
             'There was an error processing this file.'
         ])
        
-    clients_df=pd.read_excel('ClientDetails.xlsx', index_col=0)
+    clients_df=pd.read_excel('utils/ClientDetails.xlsx', index_col=0)
     #full_df
 
     #Check validation rules
