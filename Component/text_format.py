@@ -6,7 +6,7 @@ VERSION = '0102'  #Version (always set to “0101” or “0102”)
 FLAG = 'N' #Financial Storage Flag (Set to “Y” if financial details on corporates are captured. Otherwise set to “N”)
 ISSUER = 'MC' # Issuer (Ministry of Commerce and Investment)
 
-prod_type = 'OBC'#'ODF'# # 'ODF' for version 2 insted of OBC 3PRODUCT_TYPE
+prod_type = 'OBC'#'ODF' for version 2 insted of OBC 3PRODUCT_TYPE
 def get_text_header():
     
     record_id = '000'
