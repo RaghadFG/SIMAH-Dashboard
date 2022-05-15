@@ -82,7 +82,6 @@ def parse_contents(contents, filename, date):
     decoded = base64.b64decode(content_string)
     
 
-
     try:
         if 'csv' in filename:
             # Assume that the user uploaded a CSV file
@@ -99,6 +98,9 @@ def parse_contents(contents, filename, date):
         return html.Div([
             'There was an error processing this file.'
         ])
+       
+    clients_df=pd.read_excel('ClientDetails.xlsx', index_col=0)
+    #full_df
 
     #Check validation rules
     for i,row in df.iterrows():
@@ -177,11 +179,16 @@ def parse_contents(contents, filename, date):
             html.Hr(),  
         ])
 
+    #clients_df=pd.read_excel('ClientDetails.xlsx', index_col=0)
+    #full_df
+
 
 @app.callback(Output('output-data-upload', 'children'),
               Input('upload-data', 'contents'),
               State('upload-data', 'filename'),
               State('upload-data', 'last_modified'))
+
+
 def update_output(list_of_contents, list_of_names, list_of_dates):
     if list_of_contents is not None:
         children = [
@@ -190,12 +197,12 @@ def update_output(list_of_contents, list_of_names, list_of_dates):
         return children
 
 
-
 @app.callback(
     Output("download-text", "data"),
     Input("btn-download-txt", "n_clicks"),
     prevent_initial_call=True,
 )
+
 def func(n_clicks):
     #download the errors in the uploaded file 
     if Flag:
