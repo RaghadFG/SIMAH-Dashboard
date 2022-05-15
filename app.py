@@ -258,7 +258,4 @@ with open('ALLM_COMM_20220440.txt','w',encoding="utf-8") as f:
     i=i+1
     f.write(''.join('\n999'+str(i).zfill(10)))
     f.close()
-
-    
-
-    dddd'''
+#####
