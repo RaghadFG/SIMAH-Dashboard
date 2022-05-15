@@ -245,6 +245,7 @@ with open('ALLM_COMM_20220440.txt','w',encoding="utf-8") as f:
         f.write(get_table_125(row['Office Phone']))
 
         
+        
         #Block 600
         temp = full_df[full_df['Client Code']==row['Client Code']]
         for index, row in temp.iterrows(): 
