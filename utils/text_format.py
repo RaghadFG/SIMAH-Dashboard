@@ -29,7 +29,6 @@ def get_detailed_record(Record_id,cr,city,com_name,zip_code):
     
 def get_table_105(cr,long_com_name,legal_form):
     
-
     cr = "{:<26.0f}".format(cr)# Customer ID Number (CR Number)
     name = "{:<150}".format(long_com_name)#Name (ethier english or arabic name should be supplied)
     nationality  = 'SAU'
@@ -43,7 +42,7 @@ def get_table_105(cr,long_com_name,legal_form):
 def get_table_120(po,city):
         po = "" if pd.isna(po) else "{:.0f}".format(po)
         city= city
-        return city + 'P.O.BOX' + po
+        return city + 'P.O.BOX' + str(po)
 
 def get_table_125(phone):
     return ''.join('O'+'966'+'001')+str(phone)
@@ -56,24 +55,24 @@ def get_table_600(row):
     Maximum of 5000 records provided for a customer –warning message returned when there are more than 50 records.
     '''
     
-    account_number = str(row['account_number']).ljust(25)
+    account_number = str(row['AccountNumber']).ljust(25)
     guarantor_indicator = row['GuarantorIndicator']
     product_type = row['ProductType']
-    start_date = str(row['start_date'])
-    close_date = "{:<8}".format(row['close_date'])
-    installment_amount = "{:<16.0f}".format('') if pd.isnull(row['installment_amount']) else"{:<16.0f}".format(row['installment_amount'])
-    repayment_period ='{:.0f}'.format(row['repayment_period']).zfill(3) 
-    current_balance = "{:<17.0f}".format(row['current_balance'])
+    start_date = str(row['StartDate'])
+    close_date = "{:<8}".format(row['CloseDate'])
+    installment_amount = "{:<16.0f}".format('') if pd.isnull(row['InstallmentAmount']) else"{:<16.0f}".format(row['InstallmentAmount'])
+    repayment_period ='{:.0f}'.format(row['RepaymentPeriod']).zfill(3) 
+    current_balance = "{:<17.0f}".format(row['CurrentBalance'])
     payment_status = "{:<2}".format(row['PaymentStatus'])
     last_amount_paid = "{:<20}".format("") if pd.isna(row['LastAmountPaid']) else "{:<20.0f}".format(row['LastAmountPaid'])
     prev_statement_balance = "{:<14}".format('00000000')
-    credit_limit = "{:<18.0f}".format(row['credit_limit'])
+    credit_limit = "{:<18.0f}".format(row['CreditLimit'])
     satisfaction_date = "{:<8}".format('') if pd.isna(row['SatisfactionDate']) else "{:<8}".format(row['SatisfactionDate'])
-    original_default_balance = "{:<16}".format("") if pd.isna(row['original_default_balance']) else "{:<16.0f}".format(row['original_default_balance'])
+    original_default_balance = "{:<16}".format("") if pd.isna(row['OriginalDefaultBalance']) else "{:<16.0f}".format(row['OriginalDefaultBalance'])
     payment_frequency = row['PaymentFrequency']
     security_type ='NO' #this need to be updated based on SECTYPE table
     past_due_balance= "{:<16.0f}".format(row['PastDueBalance'])
-    last_payment_date = "{:<16}".format("") if pd.isna(row['last_payment_date']) else "{:<16}".format(row['last_payment_date'])
+    last_payment_date = "{:<16}".format("") if pd.isna(row['LastPaymentDate']) else "{:<16}".format(row['LastPaymentDate'])
     expiry_date = "{:<8}".format('0')
     product_status = str(row['ProductStatus']) #PRODSTATUS A for active , C closed , D for Default
     government_gurantted = 'N'
