@@ -14,6 +14,9 @@ from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 import pandas as pd
 import dash_table
+from utils.text_format import *
+
+
 app = dash.Dash(__name__)
 server = app.server 
 
@@ -21,7 +24,6 @@ server = app.server
 month=datetime.now().date().month  
 Fname=str(month)+"th-month SIMAH Report.txt"
 
-#
 
 app.layout = ddk.App([
     ddk.Header([
@@ -81,16 +83,16 @@ def parse_contents(contents, filename, date):
     content_type, content_string = contents.split(',')
     decoded = base64.b64decode(content_string)
     
-
+    global df
     try:
         if 'csv' in filename:
             # Assume that the user uploaded a CSV file
+           
             df = pd.read_csv(
                 io.StringIO(decoded.decode('utf-8')))
-
         elif 'xls' in filename:
             # Assume that the user uploaded an excel file
-            df = pd.read_excel(io.BytesIO(decoded))
+            df= pd.read_excel(io.BytesIO(decoded))
         
 
     except Exception as e:
@@ -99,9 +101,7 @@ def parse_contents(contents, filename, date):
             'There was an error processing this file.'
         ])
        
-    clients_df=pd.read_excel('utils/ClientDetails.xlsx', index_col=0)
-    #full_df
-
+   
     #Check validation rules
     for i,row in df.iterrows():
         
@@ -170,7 +170,7 @@ def parse_contents(contents, filename, date):
     #show the uploaded file
     else:
         return html.Div([
-
+            html.H6('The uploaded file'),
             dash_table.DataTable(
                 data=df.to_dict('records'),
                 columns=[{'name': i, 'id': i} for i in df.columns]
@@ -179,9 +179,6 @@ def parse_contents(contents, filename, date):
             html.Hr(),  
         ])
 
-    #clients_df=pd.read_excel('ClientDetails.xlsx', index_col=0)
-    #full_df
-    #new branch test
 
 
 @app.callback(Output('output-data-upload', 'children'),
@@ -209,9 +206,65 @@ def func(n_clicks):
     if Flag:
         return dcc.send_data_frame(erorr_df.to_csv, "Error-table.csv")
 
-    #download txt file ... not yet
-    return dict(content='not yet', filename=Fname)
+   
+    clients_df=pd.read_excel('ClientDetails.xlsx', engine='openpyxl')
+   
+    ClientCode=pd.read_excel('ClientCodeLookUp.xlsx',  engine='openpyxl')
 
-#comment for test
+    full_df=pd.DataFrame()
+
+    #Merge ClientDetails df with ClientCodeLookUp df
+    full_df=pd.merge(clients_df,ClientCode[['Client Code','AccountNumber']],on='Client Code', how='left')
+    #Merge with uploaded file
+    full_df=pd.merge(full_df, df, on='AccountNumber')
+
+    #Start fill the text file
+    with open('ALLM_COMM_20220440.txt','w',encoding="utf-8") as f:
+        i= 1    
+        #Header Block 000
+        f.write(get_text_header())
+        for index, row in clients_df.iterrows():
+            #Block 105
+            f.write('\n')
+            i=i+1
+            f.write(get_detailed_record('105',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))
+            f.write(get_table_105(row['ID Number'],row['Latin Name'],row['Legal Type']))
+ 
+
+
+            #Block 120
+            f.write('\n')
+            i=i+1
+            f.write(get_detailed_record('120',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))
+            f.write(get_table_120(row['P.O. Box'],row['Address']))
+ 
+            
+            #Block 125
+            i=i+1
+            f.write('\n')
+            f.write(get_detailed_record('125',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))# Record identifier
+            f.write(get_table_125(row['Office Phone']))
+
+
+            
+            #Block 600
+            temp = full_df[full_df['Client Code']==row['Client Code']]
+            for index, row in temp.iterrows(): 
+                f.write('\n')
+                i=i+1
+                f.write(get_detailed_record('600',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))# Record identifier
+                a=get_table_600(row)
+                f.write(get_table_600(row))
+
+            
+
+        i=i+1
+        f.write(''.join('\n999'+str(i).zfill(10)))
+        f.close()
+        f = open("ALLM_COMM_20220440.txt", "r")
+        txtcontent = f.read()
+    return dict(content=txtcontent, filename=Fname)
+
+
 if __name__ == '__main__':
     app.run_server(debug=True)
