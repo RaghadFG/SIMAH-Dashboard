@@ -15,7 +15,7 @@ import plotly.graph_objs as go
 import pandas as pd
 import dash_table
 from utils.text_format import *
-
+from utils.preprocessing import preprocessing_df 
 
 app = dash.Dash(__name__)
 server = app.server 
@@ -170,7 +170,6 @@ def parse_contents(contents, filename, date):
     #show the uploaded file
     else:
         return html.Div([
-            html.H6('The uploaded file'),
             dash_table.DataTable(
                 data=df.to_dict('records'),
                 columns=[{'name': i, 'id': i} for i in df.columns]
@@ -208,22 +207,25 @@ def func(n_clicks):
 
    
     clients_df=pd.read_excel('ClientDetails.xlsx', engine='openpyxl')
-   
+
     ClientCode=pd.read_excel('ClientCodeLookUp.xlsx',  engine='openpyxl')
 
-    full_df=pd.DataFrame()
 
-    #Merge ClientDetails df with ClientCodeLookUp df
-    full_df=pd.merge(clients_df,ClientCode[['Client Code','AccountNumber']],on='Client Code', how='left')
+
+    first_merge=pd.merge(clients_df,ClientCode,on='Client Code')
+
     #Merge with uploaded file
-    full_df=pd.merge(full_df, df, on='AccountNumber')
+    full_df=pd.merge(first_merge, df, on='AccountNumber')
 
+    full_df =full_df[full_df['AccountNumber'].isin(df['AccountNumber'])]
+    
+    full_df=preprocessing_df(full_df)
     #Start fill the text file
-    with open('ALLM_COMM_20220440.txt','w',encoding="utf-8") as f:
+    with open('ALLM_COMM_20220440.txt','w') as f:
         i= 1    
         #Header Block 000
         f.write(get_text_header())
-        for index, row in clients_df.iterrows():
+        for index, row in full_df.iterrows():
             #Block 105
             f.write('\n')
             i=i+1
@@ -253,16 +255,16 @@ def func(n_clicks):
                 f.write('\n')
                 i=i+1
                 f.write(get_detailed_record('600',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))# Record identifier
-                a=get_table_600(row)
                 f.write(get_table_600(row))
+                print(get_table_600(row))
+
 
             
-
         i=i+1
         f.write(''.join('\n999'+str(i).zfill(10)))
-        f.close()
-        f = open("ALLM_COMM_20220440.txt", "r")
-        txtcontent = f.read()
+        
+    m = open("ALLM_COMM_20220440.txt", "r")
+    txtcontent = m.read()
     return dict(content=txtcontent, filename=Fname)
 
 
