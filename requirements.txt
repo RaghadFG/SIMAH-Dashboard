@@ -13,4 +13,5 @@ python-dateutil
 dash-enterprise-auth
 dash-extensions
 Werkzeug==2.0.0
+#add openpyxl
 openpyxl
