@@ -8,7 +8,7 @@ legal_type_mapping = {'Chamber of ': "CCI", 'Female': "CCI",'General ':'GPA','In
  'Establishment': "LBS",
 'General Partnership':'GPA','Insurance ':'ISO',
 'Joint Stock ':'JSC','Licensed ':'UNK','Limited ':'LPA','Literary, ':'UNK',"Male":'CCI','Unknown':'UNK',' ':'UNK'}
-
+#
 def preprocessing_df(df):
     
     df = df.replace({"Legal Type": legal_type_mapping})

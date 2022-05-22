@@ -16,7 +16,6 @@ import pandas as pd
 import dash_table
 from utils.text_format import *
 from utils.preprocessing import preprocessing_df 
-
 app = dash.Dash(__name__)
 server = app.server 
 
@@ -46,7 +45,7 @@ app.layout = ddk.App(theme=theme.theme,children=[
     ])]
     )
     ])]),
-
+#
         html.P(),
         html.Button("Download required column", id="btn_xlsx", style={'margin-left':'10px'}),
         dcc.Download(id="download-dataframe-xlsx"),html.P(),
