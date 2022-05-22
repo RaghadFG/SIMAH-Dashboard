@@ -23,25 +23,48 @@ server = app.server
 
 month=datetime.now().date().month  
 Fname=str(month)+"th-month SIMAH Report.txt"
+columnheaders =pd.read_excel('column header names.xlsx', engine='openpyxl')
 
 
-app.layout = ddk.App([
+app.layout = ddk.App(theme=theme.theme,children=[
+
     ddk.Header([
         ddk.Logo(src=app.get_asset_url('logo.png')),
         ddk.Title('SIMAH Dashbord'),
-    ]),
-    html.Div([
+    ])
+
+    ,html.Div([html.Div([
     ddk.Card([
     ddk.Row(children=
     [html.Div([
-        html.P('How to use:'),
-        html.P('-'),
-        html.P("Policies & Legal requirements:"),
-        html.P('-'),
+        html.Ol('Please consider the following simple steps:'),
+        html.Li('Download the required column headers.'),
+        html.Li('Upload the Excel file.'),
+        html.Li('Download SIMAH report.'),
+        
 
     ])]
     )
-    ]),html.Div([
+    ])]),
+
+        html.P(),
+        html.Button("Download required column", id="btn_xlsx", style={'margin-left':'10px'}),
+        dcc.Download(id="download-dataframe-xlsx"),html.P(),
+
+    html.Div([
+    ddk.Card([
+    ddk.Row(children= [html.Div([
+        html.Ul("Policies & Legal requirements:"),
+        html.Li('Send notifications for clients to inform them with sharing data to SIMAH Systems'),
+        html.Li('Default account definition: reporting account as default when the overdue exceeds 180 Days of due date'),
+        html.Li('Send Notification for the client before reporting as Default (30-Days before)') ,
+     html.Li('Data quality reports will be sent in monthly basis by SIMAH for live data through MFT'),
+
+    ])]
+
+    )])])
+    
+    ,html.Div([
     dcc.Upload(
         id='upload-data',
         children=html.Div([
@@ -64,11 +87,12 @@ app.layout = ddk.App([
     html.Div(id='output-data-upload'),
 
    
-         html.Button("Download File", id="btn-download-txt"),
+         html.Button("Download SIMAH report", id="btn-download-txt", style={'margin-left':'9px'}),
          dcc.Download(id="download-text")
     
 ])
- ])])
+])])
+
 def parse_contents(contents, filename, date):
     global erorr_df,Flag
 
@@ -178,12 +202,21 @@ def parse_contents(contents, filename, date):
             html.Hr(),  
         ])
 
+@app.callback(
+    Output("download-dataframe-xlsx", "data"),
+    Input("btn_xlsx", "n_clicks"),
+    prevent_initial_call=True,
+)
+
+def funcc(n_clicks):
+    return dcc.send_data_frame(columnheaders.to_excel, "columnheaders.xlsx")
 
 
 @app.callback(Output('output-data-upload', 'children'),
               Input('upload-data', 'contents'),
               State('upload-data', 'filename'),
-              State('upload-data', 'last_modified'))
+              State('upload-data', 'last_modified')
+              )
 
 
 def update_output(list_of_contents, list_of_names, list_of_dates):
@@ -256,7 +289,6 @@ def func(n_clicks):
                 i=i+1
                 f.write(get_detailed_record('600',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))# Record identifier
                 f.write(get_table_600(row))
-                print(get_table_600(row))
 
 
             
