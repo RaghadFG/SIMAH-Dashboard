@@ -15,7 +15,7 @@ import plotly.graph_objs as go
 import pandas as pd
 import dash_table
 from utils.text_format import *
-from utils.preprocessing import preprocessing_df 
+from utils.preprocessing import get_preprocessing 
 app = dash.Dash(__name__)
 server = app.server 
 
@@ -36,10 +36,20 @@ app.layout = ddk.App(theme=theme.theme,children=[
     ddk.Card([
     ddk.Row(children=
     [html.Div([
-        html.Ol('Please consider the following simple steps:'),
-        html.Li('Download the required column headers.'),
-        html.Li('Upload the Excel file.'),
-        html.Li('Download SIMAH report.'),
+
+          dcc.Markdown('''
+    **Please consider the following simple steps:**
+''')
+      ,
+        dcc.Markdown('''
+
+    * Download the required column headers.
+    * Upload the Excel file.
+    * Download SIMAH report.
+    
+''')
+,
+  
         
 
     ])]
@@ -53,12 +63,19 @@ app.layout = ddk.App(theme=theme.theme,children=[
     html.Div([
     ddk.Card([
     ddk.Row(children= [html.Div([
-        html.Ul("Policies & Legal requirements:"),
-        html.Li('Send notifications for clients to inform them with sharing data to SIMAH Systems'),
-        html.Li('Default account definition: reporting account as default when the overdue exceeds 180 Days of due date'),
-        html.Li('Send Notification for the client before reporting as Default (30-Days before)') ,
-     html.Li('Data quality reports will be sent in monthly basis by SIMAH for live data through MFT'),
 
+         dcc.Markdown('''
+    **Policies & Legal requirements:**
+''')
+      ,
+        dcc.Markdown('''
+    * Send notifications for clients to inform them with sharing data to SIMAH Systems
+    * Default account definition: reporting account as default when the overdue exceeds 180 Days of due date
+    * Send Notification for the client before reporting as Default (30-Days before)
+    * Data quality reports will be sent in monthly basis by SIMAH for live data through MFT
+    
+''')
+,
     ])]
 
     )])])
@@ -251,43 +268,48 @@ def func(n_clicks):
 
     full_df =full_df[full_df['AccountNumber'].isin(df['AccountNumber'])]
     
-    full_df=preprocessing_df(full_df)
+    full_df=get_preprocessing(full_df)
+    clients = pd.DataFrame({'ID Number':[None]})
+
     #Start fill the text file
     with open('ALLM_COMM_20220440.txt','w') as f:
         i= 1    
         #Header Block 000
         f.write(get_text_header())
         for index, row in full_df.iterrows():
-            #Block 105
-            f.write('\n')
-            i=i+1
-            f.write(get_detailed_record('105',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))
-            f.write(get_table_105(row['ID Number'],row['Latin Name'],row['Legal Type']))
- 
-
-
-            #Block 120
-            f.write('\n')
-            i=i+1
-            f.write(get_detailed_record('120',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))
-            f.write(get_table_120(row['P.O. Box'],row['Address']))
- 
-            
-            #Block 125
-            i=i+1
-            f.write('\n')
-            f.write(get_detailed_record('125',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))# Record identifier
-            f.write(get_table_125(row['Office Phone']))
-
-
-            
-            #Block 600
-            temp = full_df[full_df['Client Code']==row['Client Code']]
-            for index, row in temp.iterrows(): 
+            if row['ID Number'] not in clients['ID Number'].values:
+                #Block 105
                 f.write('\n')
                 i=i+1
-                f.write(get_detailed_record('600',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))# Record identifier
-                f.write(get_table_600(row))
+                f.write(get_detailed_record('105',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))
+                f.write(get_table_105(row['ID Number'],row['Latin Name'],row['Legal Type']))
+    
+                #Block 120
+                f.write('\n')
+                i=i+1
+                f.write(get_detailed_record('120',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))
+                f.write(get_table_120(row['P.O. Box'],row['Address']))
+    
+                
+                #Block 125
+                i=i+1
+                f.write('\n')
+                f.write(get_detailed_record('125',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))# Record identifier
+                f.write(get_table_125(row['Office Phone']))
+
+                clients.at[i,'ID Number'] = row['ID Number']
+
+    
+                #Block 600
+                temp = full_df[full_df['Client Code']==row['Client Code']]
+                for index, row in temp.iterrows(): 
+                    f.write('\n')
+                    i=i+1
+                    f.write(get_detailed_record('600',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))# Record identifier
+                    f.write(get_table_600(row))
+        
+        
+        #print(clients)
 
 
             

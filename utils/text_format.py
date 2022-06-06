@@ -6,7 +6,8 @@ VERSION = '0102'  #Version (always set to “0101” or “0102”)
 FLAG = 'N' #Financial Storage Flag (Set to “Y” if financial details on corporates are captured. Otherwise set to “N”)
 ISSUER = 'MC' # Issuer (Ministry of Commerce and Investment)
 
-prod_type = 'OBC'#'ODF' for version 2 insted of OBC 3PRODUCT_TYPE
+prod_type = 'OBC' #'ODF' for version 2 insted of OBC 3PRODUCT_TYPE
+
 def get_text_header():
     
     record_id = '000'
@@ -62,11 +63,11 @@ def get_table_600(row):
     close_date = "{:<8}".format(row['CloseDate'])
     installment_amount = "{:<16.0f}".format('') if pd.isnull(row['InstallmentAmount']) else"{:<16.0f}".format(row['InstallmentAmount'])
     repayment_period ='{:.0f}'.format(row['RepaymentPeriod']).zfill(3) 
-    current_balance = "{:<17.0f}".format(row['CurrentBalance'])
+    current_balance = "{:<17.0f}".format(row["CurrentBalance"])
     payment_status = "{:<2}".format(row['PaymentStatus'])
     last_amount_paid = "{:<20}".format("") if pd.isna(row['LastAmountPaid']) else "{:<20.0f}".format(row['LastAmountPaid'])
     prev_statement_balance = "{:<14}".format('00000000')
-    credit_limit = "{:<18.0f}".format(row['CreditLimit'])
+    #credit_limit = "{:<18.0f}".format(row['CreditLimit'])
     satisfaction_date = "{:<8}".format('') if pd.isna(row['SatisfactionDate']) else "{:<8}".format(row['SatisfactionDate'])
     original_default_balance = "{:<16}".format("") if pd.isna(row['OriginalDefaultBalance']) else "{:<16.0f}".format(row['OriginalDefaultBalance'])
     payment_frequency = row['PaymentFrequency']
@@ -82,10 +83,9 @@ def get_table_600(row):
     new_loan_from_restructured = 'N'
     revolving_limit = "{:<441}".format('N')
     as_of_date= dt.datetime.now().strftime("%d/%m/%Y")
-    
     return account_number+guarantor_indicator+product_type+start_date+close_date+installment_amount\
-+repayment_period+current_balance+payment_status+last_amount_paid+prev_statement_balance+credit_limit+satisfaction_date\
++repayment_period+current_balance+payment_status+last_amount_paid+prev_statement_balance+satisfaction_date\
 +original_default_balance+payment_frequency+security_type+past_due_balance+last_payment_date+expiry_date+product_status+government_gurantted+default_status\
 +settle_date+limit_category+new_loan_from_restructured+revolving_limit+as_of_date
 
-    
+#don't forget credit_limit
