@@ -258,58 +258,57 @@ def func(n_clicks):
     clients_df=pd.read_excel('ClientDetails.xlsx', engine='openpyxl')
 
     ClientCode=pd.read_excel('ClientCodeLookUp.xlsx',  engine='openpyxl')
-
-
+    
 
     first_merge=pd.merge(clients_df,ClientCode,on='Client Code')
 
+   
     #Merge with uploaded file
+    first_merge['AccountNumber']=first_merge['AccountNumber'].astype(str)
     full_df=pd.merge(first_merge, df, on='AccountNumber')
-
-    full_df =full_df[full_df['AccountNumber'].isin(df['AccountNumber'])]
     
+    full_df =full_df[full_df['AccountNumber'].isin(df['AccountNumber'])]
     full_df=get_preprocessing(full_df)
-    clients = pd.DataFrame({'ID Number':[None]})
+  
+    #Unique clients 
+    clients =full_df.drop_duplicates(subset=['Client Code'])
 
     #Start fill the text file
     with open('ALLM_COMM_20220440.txt','w') as f:
         i= 1    
         #Header Block 000
         f.write(get_text_header())
-        for index, row in full_df.iterrows():
-            if row['ID Number'] not in clients['ID Number'].values:
-                #Block 105
-                f.write('\n')
-                i=i+1
-                f.write(get_detailed_record('105',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))
-                f.write(get_table_105(row['ID Number'],row['Latin Name'],row['Legal Type']))
-    
-                #Block 120
-                f.write('\n')
-                i=i+1
-                f.write(get_detailed_record('120',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))
-                f.write(get_table_120(row['P.O. Box'],row['Address']))
-    
-                
-                #Block 125
-                i=i+1
-                f.write('\n')
-                f.write(get_detailed_record('125',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))# Record identifier
-                f.write(get_table_125(row['Office Phone']))
+        for index, row in clients.iterrows():
+            #Block 105
+            f.write('\n')
+            i=i+1
+            f.write(get_detailed_record('105',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))
+            f.write(get_table_105(row['ID Number'],row['Latin Name'],row['Legal Type']))
 
-                clients.at[i,'ID Number'] = row['ID Number']
+            #Block 120
+            f.write('\n')
+            i=i+1
+            f.write(get_detailed_record('120',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))
+            f.write(get_table_120(row['P.O. Box'],row['Address']))
 
+            
+            #Block 125
+            i=i+1
+            f.write('\n')
+            f.write(get_detailed_record('125',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))# Record identifier
+            f.write(get_table_125(row['Office Phone']))
+
+
+
+            #Block 600
+            temp = full_df[full_df['Client Code']==row['Client Code']]
+            for index, row in temp.iterrows(): 
+                f.write('\n')
+                i=i+1
+                f.write(get_detailed_record('600',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))# Record identifier
+                f.write(get_table_600(row))
     
-                #Block 600
-                temp = full_df[full_df['Client Code']==row['Client Code']]
-                for index, row in temp.iterrows(): 
-                    f.write('\n')
-                    i=i+1
-                    f.write(get_detailed_record('600',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))# Record identifier
-                    f.write(get_table_600(row))
-        
-        
-        #print(clients)
+    
 
 
             
