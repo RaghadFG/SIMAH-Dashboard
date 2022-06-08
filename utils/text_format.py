@@ -1,5 +1,6 @@
 import pandas as pd
 import datetime as dt
+import math
 
 MEMBER_ID = 'ALLM'
 VERSION = '0102'  #Version (always set to “0101” or “0102”)
@@ -69,7 +70,7 @@ def get_table_600(row):
     credit_limit = "{:<18.0f}".format(row['CreditLimit'])
     satisfaction_date = "{:<8}".format('') if pd.isna(row['SatisfactionDate']) else "{:<8}".format(row['SatisfactionDate'])
     original_default_balance = "{:<16}".format("") if pd.isna(row['OriginalDefaultBalance']) else "{:<16.0f}".format(row['OriginalDefaultBalance'])
-    payment_frequency = row['PaymentFrequency']
+    payment_frequency = "{:<26}".format(row['PaymentFrequency'])
     security_type ='NO' #this need to be updated based on SECTYPE table
     past_due_balance= "{:<16.0f}".format(row['PastDueBalance'])
     last_payment_date = "{:<16}".format("") if pd.isna(row['LastPaymentDate']) else "{:<16}".format(row['LastPaymentDate'])
@@ -80,12 +81,28 @@ def get_table_600(row):
     settle_date = "{:<8}".format('') if pd.isna(row['SettleDate']) else "{:<8}".format(row['SettleDate'])
     limit_category = "{:<39}".format('FUNDED')
     new_loan_from_restructured = 'N'
-    revolving_limit = "{:<441}".format('N')
+    revolving_limit = "{:<440}".format('N')
     as_of_date= dt.datetime.now().strftime("%d/%m/%Y")
     
     return account_number+guarantor_indicator+product_type+start_date+close_date+installment_amount\
 +repayment_period+current_balance+payment_status+last_amount_paid+prev_statement_balance+credit_limit+satisfaction_date\
 +original_default_balance+payment_frequency+security_type+past_due_balance+last_payment_date+expiry_date+product_status+government_gurantted+default_status\
 +settle_date+limit_category+new_loan_from_restructured+revolving_limit+as_of_date
+
+
+def get_table_615(total_credit_limit,total_current_balance,past_due_balance,age):
+    credit_limit= "{:<19.2f}".format(total_credit_limit)
+    current_balance= "{:<19.2f}".format(math.floor(total_current_balance))
+    past_due_balance = "{:<19.2f}".format(past_due_balance)
+    collateral = "{:<1}".format('N') #Collateral
+    age = "{:<3.0f}".format(age)  #Relationship Age
+    total_credit_limit2 = "{:<38.2f}".format(total_credit_limit)
+    total_current_balance2 = "{:<19.2f}".format(math.floor(total_current_balance))
+    non_funded_utilisation = "{:<36.2f}".format(0)
+    non_Funded_limit  = "{:<18.2f}".format(0)
+    
+    return credit_limit +current_balance+'A' + past_due_balance + collateral + age + total_credit_limit2 + total_current_balance2 + non_funded_utilisation + non_Funded_limit
+
+
 
     

@@ -15,7 +15,7 @@ import plotly.graph_objs as go
 import pandas as pd
 import dash_table
 from utils.text_format import *
-from utils.preprocessing import get_preprocessing 
+from utils.preprocessing import get_preprocessing,check_uploded_columns 
 app = dash.Dash(__name__)
 server = app.server 
 
@@ -132,7 +132,7 @@ def parse_contents(contents, filename, date):
                 io.StringIO(decoded.decode('utf-8')))
         elif 'xls' in filename:
             # Assume that the user uploaded an excel file
-            df= pd.read_excel(io.BytesIO(decoded))
+            df= pd.read_excel(io.BytesIO(decoded),engine='openpyxl')
         
 
     except Exception as e:
@@ -141,7 +141,7 @@ def parse_contents(contents, filename, date):
             'There was an error processing this file.'
         ])
        
-   
+    df = check_uploded_columns(df)
     #Check validation rules
     for i,row in df.iterrows():
         
@@ -255,16 +255,16 @@ def func(n_clicks):
         return dcc.send_data_frame(erorr_df.to_csv, "Error-table.csv")
 
    
-    clients_df=pd.read_excel('ClientDetails.xlsx', engine='openpyxl')
 
-    ClientCode=pd.read_excel('ClientCodeLookUp.xlsx',  engine='openpyxl')
-    
+    clients_df=pd.read_excel('data/ClientDetails.xlsx', engine='openpyxl')
+
+    ClientCode=pd.read_excel('data/ClientCodeLookUp.xlsx',  engine='openpyxl')
 
     first_merge=pd.merge(clients_df,ClientCode,on='Client Code')
 
    
     #Merge with uploaded file
-    first_merge['AccountNumber']=first_merge['AccountNumber'].astype(str)
+    #first_merge['AccountNumber']=first_merge['AccountNumber'].astype(str)
     full_df=pd.merge(first_merge, df, on='AccountNumber')
     
     full_df =full_df[full_df['AccountNumber'].isin(df['AccountNumber'])]
@@ -307,6 +307,14 @@ def func(n_clicks):
                 i=i+1
                 f.write(get_detailed_record('600',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))# Record identifier
                 f.write(get_table_600(row))
+
+            #Block 615
+            if index == temp.index[-1]:
+                f.write('\n')
+                i=i+1
+                
+                f.write(get_detailed_record('615',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))
+                f.write(get_table_615(temp['CreditLimit'].sum(),temp['CurrentBalance'].sum(),temp['PastDueBalance'].sum(),temp['age'].max()))
     
     
 
