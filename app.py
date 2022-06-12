@@ -21,8 +21,6 @@ import dash_user_analytics
 
 app = dash.Dash(__name__)
 server = app.server 
-dash_user_analytics.DashUserAnalytics(app)
-
 
 month=datetime.now().date().month  
 Fname=str(month)+"th-month SIMAH Report.txt"
@@ -112,6 +110,8 @@ app.layout = ddk.App(theme=theme.theme,children=[
     
 ])
 ])])
+dash_user_analytics.DashUserAnalytics(app)
+
 
 def parse_contents(contents, filename, date):
     global erorr_df,Flag
