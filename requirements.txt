@@ -15,3 +15,4 @@ dash-extensions
 Werkzeug==2.0.0
 #add openpyxl
 openpyxl
+dash-user-analytics
