@@ -1,6 +1,7 @@
 import pandas as pd
 import datetime as dt
 import math
+import numpy as np
 
 MEMBER_ID = 'ALLM'
 VERSION = '0102'  #Version (always set to “0101” or “0102”)
@@ -63,11 +64,11 @@ def get_table_600(row):
     close_date = "{:<8}".format(row['CloseDate'])
     installment_amount = "{:<16.0f}".format('') if pd.isnull(row['InstallmentAmount']) else"{:<16.0f}".format(row['InstallmentAmount'])
     repayment_period ='{:.0f}'.format(row['RepaymentPeriod']).zfill(3) 
-    current_balance = "{:<17.0f}".format(row['CurrentBalance'])
+    current_balance = "{:<17.0f}".format(np.floor(row['CurrentBalance']))
     payment_status = "{:<2}".format(row['PaymentStatus'])
     last_amount_paid = "{:<20}".format("") if pd.isna(row['LastAmountPaid']) else "{:<20.0f}".format(row['LastAmountPaid'])
     prev_statement_balance = "{:<14}".format('00000000')
-    credit_limit = "{:<18.0f}".format(row['CreditLimit'])
+    credit_limit = "{:<18.0f}".format(math.floor(row['CreditLimit']))
     satisfaction_date = "{:<8}".format('') if pd.isna(row['SatisfactionDate']) else "{:<8}".format(row['SatisfactionDate'])
     original_default_balance = "{:<16}".format("") if pd.isna(row['OriginalDefaultBalance']) else "{:<16.0f}".format(row['OriginalDefaultBalance'])
     payment_frequency = "{:<26}".format(row['PaymentFrequency'])
