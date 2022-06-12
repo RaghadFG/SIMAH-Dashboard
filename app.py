@@ -6,6 +6,7 @@ from dash.dependencies import Input, Output
 import plotly.express as px
 import base64
 from datetime import datetime
+import numpy as np
 import math
 import io
 import theme
@@ -314,7 +315,7 @@ def func(n_clicks):
                 i=i+1
                 
                 f.write(get_detailed_record('615',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))
-                f.write(get_table_615(temp['CreditLimit'].sum(),temp['CurrentBalance'].sum(),temp['PastDueBalance'].sum(),temp['age'].max()))
+                f.write(get_table_615((np.floor(temp['CreditLimit'])).sum(),(np.floor(temp['CurrentBalance'])).sum(),temp['PastDueBalance'].sum(),temp['age'].max()))
     
     
 
