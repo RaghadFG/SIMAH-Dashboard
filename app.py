@@ -18,7 +18,7 @@ import dash_table
 from utils.text_format import *
 from utils.preprocessing import get_preprocessing,check_uploded_columns
 import dash_user_analytics
- 
+
 app = dash.Dash(__name__)
 
 server = app.server 
