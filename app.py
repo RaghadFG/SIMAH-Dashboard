@@ -5,7 +5,8 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.express as px
 import base64
-from datetime import datetime
+from datetime import datetime, timezone
+from datetime import *
 import numpy as np
 import math
 import io
@@ -18,13 +19,19 @@ import dash_table
 from utils.text_format import *
 from utils.preprocessing import get_preprocessing,check_uploded_columns
 import dash_user_analytics
+from dateutil import tz
 
 app = dash.Dash(__name__)
 server = app.server 
 
-month=datetime.now().date().month  
-Fname=str(month)+"th-month SIMAH Report.txt"
+from_zone = tz.gettz('UTC')
+to_zone = tz.gettz('Asia/Riyadh')
+
+# month=datetime.now().date().month  
+# Fname=str(month)+"th-month SIMAH Report.txt"
+
 columnheaders =pd.read_excel('column header names.xlsx', engine='openpyxl')
+
 
 
 app.layout = ddk.App(theme=theme.theme,children=[
@@ -120,6 +127,7 @@ def parse_contents(contents, filename, date):
     "AccountNumber": [None],
     "Error": [None]
     }
+    
 
     erorr_df = pd.DataFrame(error_data)
     Flag = False
@@ -276,9 +284,13 @@ def func(n_clicks):
   
     #Unique clients 
     clients =full_df.drop_duplicates(subset=['Client Code'])
+    
+# f"SIMAH {datetime.datetime.now(datetime.timezone.utc).astimezone(to_zone):%Y-%m-%d %H:%M:%S}"
+    name=datetime.now().strftime("%d/%m/%Y %H:%M:%S").replace("/", "|")
 
+    n=name+'.txt'
     #Start fill the text file
-    with open('ALLM_COMM_20220440.txt','w') as f:
+    with open(n,'w') as f:
         i= 1    
         #Header Block 000
         f.write(get_text_header())
@@ -327,9 +339,9 @@ def func(n_clicks):
         i=i+1
         f.write(''.join('\n999'+str(i).zfill(10)))
         
-    m = open("ALLM_COMM_20220440.txt", "r")
+    m = open(n, "r")
     txtcontent = m.read()
-    return dict(content=txtcontent, filename=Fname)
+    return dict(content=txtcontent, filename=f"SIMAH {datetime.now(timezone.utc).astimezone(to_zone):%Y-%m-%d %H:%M:%S}")
 
 
 if __name__ == '__main__':
