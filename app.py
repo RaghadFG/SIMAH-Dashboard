@@ -33,8 +33,8 @@ to_zone = tz.gettz('Asia/Riyadh')
 columnheaders =pd.read_excel('column header names.xlsx', engine='openpyxl')
 
 
-
-app.layout = ddk.App(theme=theme.theme,children=[
+def serve_layout():
+    return ddk.App(theme=theme.theme,children=[
 
     ddk.Header([
         ddk.Logo(src=app.get_asset_url('logo.png')),
@@ -116,7 +116,12 @@ app.layout = ddk.App(theme=theme.theme,children=[
          dcc.Download(id="download-text")
     
 ])
+
 ])])
+
+
+
+app.layout = serve_layout
 dash_user_analytics.DashUserAnalytics(app)
 
 
