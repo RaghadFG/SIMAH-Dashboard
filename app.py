@@ -20,6 +20,7 @@ from utils.text_format import *
 from utils.preprocessing import get_preprocessing,check_uploded_columns
 import dash_user_analytics
 from dateutil import tz
+from dash.exceptions import PreventUpdate
 
 app = dash.Dash(__name__)
 server = app.server 
@@ -104,43 +105,46 @@ def serve_layout():
             'borderStyle': 'dashed',
             'borderRadius': '5px',
             'textAlign': 'center',
-            'margin': '10px'
-        },
+            'margin': '10px'},
         # Allow multiple files to be uploaded
-        multiple=True
+        multiple=False
     ),
     html.Div(id='output-data-upload'),
+    dcc.Store(id='Flag'),
+    dcc.Store(id='error_df'),
+    dcc.Store(id='df'),
 
    
-         html.Button("Download SIMAH report", id="btn-download-txt", style={'margin-left':'9px'}),
-         dcc.Download(id="download-text")
+    html.Button("Download SIMAH report", id="btn-download-txt", style={'margin-left':'9px'}),
+    dcc.Download(id="download-text")
     
-])
+]),
+   
 
 ])])
 
-
-
 app.layout = serve_layout
+
 dash_user_analytics.DashUserAnalytics(app)
 
 
+ 
+# @app.callback(
+#     Output("table", "children"),
+#     Output("Flag", "value"),
+#     Output("error_df", "data"),
+#     Output("df", "data"),
+#     Input("run", "n_intervals"),
+#     prevent_initial_call=True,    
+# )
+
+
+
 def parse_contents(contents, filename, date):
-    global erorr_df,Flag
-
-    error_data = {
-    "AccountNumber": [None],
-    "Error": [None]
-    }
-    
-
-    erorr_df = pd.DataFrame(error_data)
-    Flag = False
 
     content_type, content_string = contents.split(',')
     decoded = base64.b64decode(content_string)
     
-    global df
     try:
         if 'csv' in filename:
             # Assume that the user uploaded a CSV file
@@ -157,83 +161,205 @@ def parse_contents(contents, filename, date):
         return html.Div([
             'There was an error processing this file.'
         ])
-       
-    df = check_uploded_columns(df)
-    #Check validation rules
-    for i,row in df.iterrows():
-        
-        #check 1st rule
-        if (row['LastAmountPaid'] == 0) and (row['LastPaymentDate']!=''):
-            Flag=True
-            erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
-            #1st error in AccountNumber
-            if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
-                erorr_df.at[i,'Error'] = 'Error: LastAmountPaid = 0 while valid LastPaymentDate is provided'
-            #more than one error in the same AccountNumber
-            else:
-                erorr_df.at[i,'Error'] = 'Error: LastAmountPaid = 0 while valid LastPaymentDate is provided'+' | '+str(erorr_df.at[i,'Error'])
 
-        #check 2st rule
-        if (row['LastAmountPaid'] != 0) and (row['LastPaymentDate']==''):
-            Flag=True
-            erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
-            #1st error in AccountNumber
-            if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
-                erorr_df.at[i,'Error'] = 'Error: LastPaymentDate is not provided while there is amount paid'
-            #more than one error in the same AccountNumber
-            else:
-                erorr_df.at[i,'Error'] = 'Error: LastPaymentDate is not provided while there is amount paid'+' | '+str(erorr_df.at[i,'Error'])
-        
-        #check 3st rule
-        if row['PastDueBalance']>row['CurrentBalance']:
-            Flag=True
-            erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
-            #1st error in AccountNumber
-            if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
-                erorr_df.at[i,'Error'] = 'Error: PastDueBalance > OutStanding'
-            #more than one error in the same AccountNumber
-            else:
-                erorr_df.at[i,'Error'] = 'Error: PastDueBalance > OutStanding'+' | '+str(erorr_df.at[i,'Error'])
-
-        #check 4st rule
-        if  (row['PaymentStatus'] == 1) and (row['PastDueBalance']<= 0):
-            Flag=True
-            erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
-            #1st error in AccountNumber
-            if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
-                erorr_df.at[i,'Error'] = 'Error: PaymentStatus is 1 while PastDueBalance is not > 0'
-            #more than one error in the same AccountNumber
-            else:
-                erorr_df.at[i,'Error'] = 'Error: PaymentStatus is 1 while PastDueBalance is not > 0'+" | "+str(erorr_df.at[i,'Error'])       
-
-
-    #the uploaded file has errors
-    if Flag:
-        #show the errors
-        return html.Div([
-        
-        html.H5('Ops fix the errors then try uploading the file again'),
-        html.H6('Error Table'),
     
+    return df.to_dict('records')
+  
 
-        dash_table.DataTable(
-            data=erorr_df.to_dict('records'),
-            columns=[{'name': i, 'id': i} for i in erorr_df.columns]
-        ),
+@app.callback(Output('output-data-upload', 'children'),
+              Output("Flag", "value"),
+              Output("error_df", "data"),
+              Output("df", "data"),
+              Input('upload-data', 'contents'),
+              State('upload-data', 'filename'),
+              State('upload-data', 'last_modified'),
+               prevent_initial_call=True,)
 
-        html.Hr(), 
-            ])
+def update_output(contents, name, date):
+    error_data = {
+    "AccountNumber": [None],
+    "Error": [None]
+    }
+    erorr_df = pd.DataFrame(error_data)
+    Flag = False
 
-    #show the uploaded file
-    else:
-        return html.Div([
+
+    if contents is not None:
+        children = parse_contents(contents,name, date)
+        df = pd.DataFrame.from_dict(children)
+
+        df = check_uploded_columns(df)
+        #Check validation rules
+        for i,row in df.iterrows():
+            
+            #check 1st rule
+            if (row['LastAmountPaid'] == 0) and (row['LastPaymentDate']!=''):
+                Flag=True
+                erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
+                #1st error in AccountNumber
+                if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
+                    erorr_df.at[i,'Error'] = 'Error: LastAmountPaid = 0 while valid LastPaymentDate is provided'
+                #more than one error in the same AccountNumber
+                else:
+                    erorr_df.at[i,'Error'] = 'Error: LastAmountPaid = 0 while valid LastPaymentDate is provided'+' | '+str(erorr_df.at[i,'Error'])
+
+            #check 2st rule
+            if (row['LastAmountPaid'] != 0) and (row['LastPaymentDate']==''):
+                Flag=True
+                erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
+                #1st error in AccountNumber
+                if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
+                    erorr_df.at[i,'Error'] = 'Error: LastPaymentDate is not provided while there is amount paid'
+                #more than one error in the same AccountNumber
+                else:
+                    erorr_df.at[i,'Error'] = 'Error: LastPaymentDate is not provided while there is amount paid'+' | '+str(erorr_df.at[i,'Error'])
+            
+            #check 3st rule
+            if row['PastDueBalance']>row['CurrentBalance']:
+                Flag=True
+                erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
+                #1st error in AccountNumber
+                if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
+                    erorr_df.at[i,'Error'] = 'Error: PastDueBalance > OutStanding'
+                #more than one error in the same AccountNumber
+                else:
+                    erorr_df.at[i,'Error'] = 'Error: PastDueBalance > OutStanding'+' | '+str(erorr_df.at[i,'Error'])
+
+            #check 4st rule
+            if  (row['PaymentStatus'] == 1) and (row['PastDueBalance']<= 0):
+                Flag=True
+                erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
+                #1st error in AccountNumber
+                if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
+                    erorr_df.at[i,'Error'] = 'Error: PaymentStatus is 1 while PastDueBalance is not > 0'
+                #more than one error in the same AccountNumber
+                else:
+                    erorr_df.at[i,'Error'] = 'Error: PaymentStatus is 1 while PastDueBalance is not > 0'+" | "+str(erorr_df.at[i,'Error'])       
+
+    # erorr_df=erorr_df.to_dict('rows')
+        #the uploaded file has errors
+        if Flag:
+           # show the errors
+            return html.Div([
+            
+            html.H5('Ops fix the errors then try uploading the file again'),
+            html.H6('Error Table'),
+        
+
             dash_table.DataTable(
-                data=df.to_dict('records'),
-                columns=[{'name': i, 'id': i} for i in df.columns]
+                data=erorr_df.to_dict('records'),
+                columns=[{'name': i, 'id': i} for i in erorr_df.columns]
             ),
 
-            html.Hr(),  
-        ])
+            html.Hr(), 
+                ]),Flag,erorr_df.to_dict('records'),df.to_dict('records')
+
+        #show the uploaded file
+        else:
+    
+            return html.Div([
+                dash_table.DataTable(
+                    data=df.to_dict('records'),
+                    columns=[{'name': i, 'id': i} for i in df.columns]
+                ),
+
+                html.Hr(),  
+            ]),Flag,erorr_df.to_dict('records'),df.to_dict('records')
+
+@app.callback(
+    Output("download-text", "data"),
+    Input("btn-download-txt", "n_clicks"),
+    State("Flag", "value"),
+    State("error_df", "data"),
+    State("df", "data"),
+    prevent_initial_call=True,
+)
+def func(n_clicks,Flag,error_dff,dff):
+    df=pd.DataFrame.from_dict(dff)
+    error_df=pd.DataFrame.from_dict(error_dff)
+
+    if df is None:
+        raise PreventUpdate
+
+    if n_clicks:
+        if Flag:
+            return dcc.send_data_frame(pd.DataFrame.from_dict(error_dff).to_csv, "Error-table.csv")
+
+
+
+        clients_df=pd.read_excel('data/ClientDetails.xlsx', engine='openpyxl')
+
+        ClientCode=pd.read_excel('data/ClientCodeLookUp.xlsx',  engine='openpyxl')
+
+        first_merge=pd.merge(clients_df,ClientCode,on='Client Code')
+
+
+        #Merge with uploaded file
+        full_df=pd.merge(first_merge, df, on='AccountNumber')
+        
+        full_df =full_df[full_df['AccountNumber'].isin(df['AccountNumber'])]
+        full_df=get_preprocessing(full_df)
+
+        #Unique clients 
+        clients =full_df.drop_duplicates(subset=['Client Code'])
+        
+        name=datetime.now().strftime("%d/%m/%Y %H:%M:%S").replace("/", "|")
+
+        n=name+'.txt'
+        #Start fill the text file
+        with open(n,'w') as f:
+            i= 1    
+            #Header Block 000
+            f.write(get_text_header())
+            for index, row in clients.iterrows():
+                #Block 105
+                f.write('\n')
+                i=i+1
+                f.write(get_detailed_record('105',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))
+                f.write(get_table_105(row['ID Number'],row['Latin Name'],row['Legal Type']))
+
+                #Block 120
+                f.write('\n')
+                i=i+1
+                f.write(get_detailed_record('120',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))
+                f.write(get_table_120(row['P.O. Box'],row['Address']))
+
+                
+                #Block 125
+                i=i+1
+                f.write('\n')
+                f.write(get_detailed_record('125',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))# Record identifier
+                f.write(get_table_125(row['Office Phone']))
+
+
+
+                #Block 600
+                temp = full_df[full_df['Client Code']==row['Client Code']]
+                for index, row in temp.iterrows(): 
+                    f.write('\n')
+                    i=i+1
+                    f.write(get_detailed_record('600',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))# Record identifier
+                    f.write(get_table_600(row))
+
+                #Block 615
+                if index == temp.index[-1]:
+                    f.write('\n')
+                    i=i+1
+                    
+                    f.write(get_detailed_record('615',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))
+                    f.write(get_table_615((np.floor(temp['CreditLimit'])).sum(),(np.floor(temp['CurrentBalance'])).sum(),temp['PastDueBalance'].sum(),temp['age'].max()))
+        
+        
+
+
+                
+            i=i+1
+            f.write(''.join('\n999'+str(i).zfill(10)))
+            
+        m = open(n, "r")
+        txtcontent = m.read()
+        return dict(content=txtcontent, filename=f"SIMAH {datetime.now(timezone.utc).astimezone(to_zone):%Y-%m-%d %H:%M:%S}")
+
 
 @app.callback(
     Output("download-dataframe-xlsx", "data"),
@@ -243,110 +369,6 @@ def parse_contents(contents, filename, date):
 
 def funcc(n_clicks):
     return dcc.send_data_frame(columnheaders.to_excel, "columnheaders.xlsx")
-
-
-@app.callback(Output('output-data-upload', 'children'),
-              Input('upload-data', 'contents'),
-              State('upload-data', 'filename'),
-              State('upload-data', 'last_modified')
-              )
-
-
-def update_output(list_of_contents, list_of_names, list_of_dates):
-    if list_of_contents is not None:
-        children = [
-            parse_contents(c, n, d) for c, n, d in
-            zip(list_of_contents, list_of_names, list_of_dates)]
-        return children
-
-
-@app.callback(
-    Output("download-text", "data"),
-    Input("btn-download-txt", "n_clicks"),
-    prevent_initial_call=True,
-)
-
-def func(n_clicks):
-    #download the errors in the uploaded file 
-    if Flag:
-        return dcc.send_data_frame(erorr_df.to_csv, "Error-table.csv")
-
-   
-
-    clients_df=pd.read_excel('data/ClientDetails.xlsx', engine='openpyxl')
-
-    ClientCode=pd.read_excel('data/ClientCodeLookUp.xlsx',  engine='openpyxl')
-
-    first_merge=pd.merge(clients_df,ClientCode,on='Client Code')
-
-   
-    #Merge with uploaded file
-    #first_merge['AccountNumber']=first_merge['AccountNumber'].astype(str)
-    full_df=pd.merge(first_merge, df, on='AccountNumber')
-    
-    full_df =full_df[full_df['AccountNumber'].isin(df['AccountNumber'])]
-    full_df=get_preprocessing(full_df)
-  
-    #Unique clients 
-    clients =full_df.drop_duplicates(subset=['Client Code'])
-    
-# f"SIMAH {datetime.datetime.now(datetime.timezone.utc).astimezone(to_zone):%Y-%m-%d %H:%M:%S}"
-    name=datetime.now().strftime("%d/%m/%Y %H:%M:%S").replace("/", "|")
-
-    n=name+'.txt'
-    #Start fill the text file
-    with open(n,'w') as f:
-        i= 1    
-        #Header Block 000
-        f.write(get_text_header())
-        for index, row in clients.iterrows():
-            #Block 105
-            f.write('\n')
-            i=i+1
-            f.write(get_detailed_record('105',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))
-            f.write(get_table_105(row['ID Number'],row['Latin Name'],row['Legal Type']))
-
-            #Block 120
-            f.write('\n')
-            i=i+1
-            f.write(get_detailed_record('120',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))
-            f.write(get_table_120(row['P.O. Box'],row['Address']))
-
-            
-            #Block 125
-            i=i+1
-            f.write('\n')
-            f.write(get_detailed_record('125',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))# Record identifier
-            f.write(get_table_125(row['Office Phone']))
-
-
-
-            #Block 600
-            temp = full_df[full_df['Client Code']==row['Client Code']]
-            for index, row in temp.iterrows(): 
-                f.write('\n')
-                i=i+1
-                f.write(get_detailed_record('600',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))# Record identifier
-                f.write(get_table_600(row))
-
-            #Block 615
-            if index == temp.index[-1]:
-                f.write('\n')
-                i=i+1
-                
-                f.write(get_detailed_record('615',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))
-                f.write(get_table_615((np.floor(temp['CreditLimit'])).sum(),(np.floor(temp['CurrentBalance'])).sum(),temp['PastDueBalance'].sum(),temp['age'].max()))
-    
-    
-
-
-            
-        i=i+1
-        f.write(''.join('\n999'+str(i).zfill(10)))
-        
-    m = open(n, "r")
-    txtcontent = m.read()
-    return dict(content=txtcontent, filename=f"SIMAH {datetime.now(timezone.utc).astimezone(to_zone):%Y-%m-%d %H:%M:%S}")
 
 
 if __name__ == '__main__':

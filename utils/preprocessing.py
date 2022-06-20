@@ -39,7 +39,7 @@ def change_format(df,column):
 
 
 def get_preprocessing(df):
-    
+    df['StartDate'] = pd.to_datetime(df['StartDate'])
     df = df.replace({"Legal Type": legal_type_mapping})
     df['age'] = (df['StartDate'].apply(lambda x : pd.to_datetime("now") - x)).dt.days/365
     df['CloseDate']=change_format(df,'CloseDate')
