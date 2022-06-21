@@ -234,7 +234,19 @@ def update_output(contents, name, date):
                     erorr_df.at[i,'Error'] = 'Error: PaymentStatus is 1 while PastDueBalance is not > 0'
                 #more than one error in the same AccountNumber
                 else:
-                    erorr_df.at[i,'Error'] = 'Error: PaymentStatus is 1 while PastDueBalance is not > 0'+" | "+str(erorr_df.at[i,'Error'])       
+                    erorr_df.at[i,'Error'] = 'Error: PaymentStatus is 1 while PastDueBalance is not > 0'+" | "+str(erorr_df.at[i,'Error'])      
+
+             #check 5th rule
+            if  (row['PaymentStatus'] == 'D') and (str(row['CloseDate'])== 'nan'):
+                Flag=True
+                erorr_df.at[i,'AccountNumber'] = row['AccountNumber']
+                #1st error in AccountNumber
+                if erorr_df.at[i,'Error'] == None or (str(erorr_df.at[i,'Error'])=='nan'):
+                    erorr_df.at[i,'Error'] = 'Error: payment status = D, close date should not be empty'
+                #more than one error in the same AccountNumber
+                else:
+                    erorr_df.at[i,'Error'] = 'Error: payment status = D, close date should not be empty'+" | "+str(erorr_df.at[i,'Error'])       
+ 
 
     # erorr_df=erorr_df.to_dict('rows')
         #the uploaded file has errors
