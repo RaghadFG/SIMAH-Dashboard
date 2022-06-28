@@ -167,7 +167,7 @@ def parse_contents(contents, filename, date):
   
 
 @app.callback(Output('output-data-upload', 'children'),
-              Output("Flag", "value"),
+              Output("Flag", "data"),
               Output("error_df", "data"),
               Output("df", "data"),
               Input('upload-data', 'contents'),
@@ -281,7 +281,7 @@ def update_output(contents, name, date):
 @app.callback(
     Output("download-text", "data"),
     Input("btn-download-txt", "n_clicks"),
-    State("Flag", "value"),
+    State("Flag", "data"),
     State("error_df", "data"),
     State("df", "data"),
     prevent_initial_call=True,
