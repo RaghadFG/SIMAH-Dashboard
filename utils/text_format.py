@@ -42,8 +42,8 @@ def get_table_105(cr,long_com_name,legal_form):
     return ISSUER + cr + name + nationality + legal_form + corp_flag
 
 def get_table_120(po,city):
-        po = "" if pd.isna(po) else "{:.0f}".format(po)
-        city= city
+        po = "" if pd.isna(po) else po#"{:.0f}".format(po)
+        city= "" if pd.isna(city) else city
         return city + 'P.O.BOX' + str(po)
 
 def get_table_125(phone):
@@ -58,10 +58,10 @@ def get_table_600(row):
     '''
     
     account_number = str(row['AccountNumber']).ljust(25)
-    guarantor_indicator = row['GuarantorIndicator']
+    guarantor_indicator = 'N'#row['GuarantorIndicator']
     product_type = row['ProductType']
     start_date = str(row['StartDate'])
-    close_date = "{:<8}".format(row['CloseDate'])
+    close_date = "{:<8}".format('') if pd.isna(row['CloseDate']) else "{:<8}".format(row['CloseDate'])
     installment_amount = "{:<16.0f}".format('') if pd.isnull(row['InstallmentAmount']) else"{:<16.0f}".format(row['InstallmentAmount'])
     repayment_period ='{:.0f}'.format(row['RepaymentPeriod']).zfill(3) 
     current_balance = "{:<17.0f}".format(np.floor(row['CurrentBalance']))

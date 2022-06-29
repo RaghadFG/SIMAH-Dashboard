@@ -5,8 +5,6 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.express as px
 import base64
-from datetime import datetime, timezone
-from datetime import *
 import numpy as np
 import math
 import io
@@ -17,9 +15,12 @@ import plotly.graph_objs as go
 import pandas as pd
 import dash_table
 from utils.text_format import *
-from utils.preprocessing import get_preprocessing,check_uploded_columns
+from utils.preprocessing import get_preprocessing,check_uploded_columns,legal_type_mapping
+from data.data import *
 import dash_user_analytics
 from dateutil import tz
+#from datetime import *
+from datetime import timezone
 from dash.exceptions import PreventUpdate
 
 app = dash.Dash(__name__)
@@ -125,7 +126,7 @@ def serve_layout():
 
 app.layout = serve_layout
 
-dash_user_analytics.DashUserAnalytics(app)
+#dash_user_analytics.DashUserAnalytics(app)
 
 
  
@@ -291,12 +292,12 @@ def func(n_clicks,Flag,error_dff,dff):
     error_df=pd.DataFrame.from_dict(error_dff)
 
     if df is None:
+        print('df is none')
         raise PreventUpdate
 
     if n_clicks:
         if Flag:
             return dcc.send_data_frame(pd.DataFrame.from_dict(error_dff).to_csv, "Error-table.csv")
-
 
 
         clients_df=pd.read_excel('data/ClientDetails.xlsx', engine='openpyxl')
@@ -308,14 +309,20 @@ def func(n_clicks,Flag,error_dff,dff):
 
         #Merge with uploaded file
         full_df=pd.merge(first_merge, df, on='AccountNumber')
-        
-        full_df =full_df[full_df['AccountNumber'].isin(df['AccountNumber'])]
+        if(full_df.empty):
+            clients = get_jira_data()
+            #clients['ID Number'] =int(clients['ID Number'])
+            full_df = pd.merge(clients, df, on='Client Code')
+            clients = clients[clients['Client Code'].isin(df['Client Code'])]
+            clients = clients.replace({"Legal Type": legal_type_mapping})
+        else:
+            full_df =full_df[full_df['AccountNumber'].isin(df['AccountNumber'])]
+            #Unique clients 
+            clients =full_df.drop_duplicates(subset=['Client Code'])
         full_df=get_preprocessing(full_df)
 
-        #Unique clients 
-        clients =full_df.drop_duplicates(subset=['Client Code'])
         
-        name=datetime.now().strftime("%d/%m/%Y %H:%M:%S").replace("/", "|")
+        name=datetime.datetime.now().strftime("%d%m%Y_%H%M%S")
 
         n=name+'.txt'
         #Start fill the text file
@@ -323,10 +330,12 @@ def func(n_clicks,Flag,error_dff,dff):
             i= 1    
             #Header Block 000
             f.write(get_text_header())
+            
             for index, row in clients.iterrows():
                 #Block 105
                 f.write('\n')
                 i=i+1
+                
                 f.write(get_detailed_record('105',row['ID Number'],row['City of issue'],row['Latin Name'],row['ZIP Code']))
                 f.write(get_table_105(row['ID Number'],row['Latin Name'],row['Legal Type']))
 
@@ -347,6 +356,7 @@ def func(n_clicks,Flag,error_dff,dff):
 
                 #Block 600
                 temp = full_df[full_df['Client Code']==row['Client Code']]
+
                 for index, row in temp.iterrows(): 
                     f.write('\n')
                     i=i+1
@@ -370,7 +380,7 @@ def func(n_clicks,Flag,error_dff,dff):
             
         m = open(n, "r")
         txtcontent = m.read()
-        return dict(content=txtcontent, filename=f"SIMAH {datetime.now(timezone.utc).astimezone(to_zone):%Y-%m-%d %H:%M:%S}")
+        return dict(content=txtcontent, filename=f"SIMAH {datetime.datetime.now(timezone.utc).astimezone(to_zone):%Y-%m-%d %H:%M:%S}")
 
 
 @app.callback(
@@ -384,4 +394,5 @@ def funcc(n_clicks):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(host="0.0.0.0",port=8000,debug=True)
+    #app.run_server(debug=True)
