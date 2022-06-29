@@ -16,7 +16,7 @@ params = {
     'database': os.environ['DB_NAME'],
     'host': os.environ['DB_HOST']
 }
-
+#
 # Returns a new connection to the database
 def getconn():
     return psycopg2.connect(user=params['user'],
