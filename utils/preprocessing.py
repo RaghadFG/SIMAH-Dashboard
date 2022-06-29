@@ -1,13 +1,12 @@
 import pandas as pd
-from datetime import datetime
+#import datetime
 import numpy as np
 
 
 legal_type_mapping = {'Chamber of ': "CCI", 'Female': "CCI",'General ':'GPA','Insurance ':'ISO',
 'Joint Stock ':'JSC','Licensed ':'UNK','Limited ':'LPA','Literary, ':'UNK',"Male":'CCI','Unknown':'UNK',' ':'UNK',
-'Sole Proprietorship': "LLC",
- 'Establishment': "LBS",
-'General Partnership':'GPA','Insurance ':'ISO',
+'Sole Proprietorship': "LLC",'Establishment': "LBS",'General Partnership':'GPA','Insurance ':'ISO',
+'Limited Liability Company':'LLC',
 'Joint Stock ':'JSC','Licensed ':'UNK','Limited ':'LPA','Literary, ':'UNK',"Male":'CCI','Unknown':'UNK',' ':'UNK'}
 
 
