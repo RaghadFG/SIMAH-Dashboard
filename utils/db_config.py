@@ -6,9 +6,9 @@ import psycopg2
 import sqlalchemy.pool as pool
 from sqlalchemy import create_engine
 import pandas as pd
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
-load_dotenv()
+#load_dotenv()
 params = {
     'user': os.environ['DB_USERNAME'],
     'password': os.environ['DB_PASSWORD'],
