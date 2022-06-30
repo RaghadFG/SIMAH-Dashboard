@@ -65,7 +65,7 @@ def get_table_600(row):
     installment_amount = "{:<16.0f}".format('') if pd.isnull(row['InstallmentAmount']) else"{:<16.0f}".format(row['InstallmentAmount'])
     repayment_period ='{:.0f}'.format(row['RepaymentPeriod']).zfill(3) 
     current_balance = "{:<17.0f}".format(np.floor(row['CurrentBalance']))
-    payment_status = "{:<2}".format(row['PaymentStatus'])
+    payment_status = "{:<2}".format(int(row['PaymentStatus']))
     last_amount_paid = "{:<20}".format("") if pd.isna(row['LastAmountPaid']) else "{:<20.0f}".format(row['LastAmountPaid'])
     prev_statement_balance = "{:<14}".format('00000000')
     credit_limit = "{:<18.0f}".format(math.floor(row['CreditLimit']))
@@ -73,7 +73,7 @@ def get_table_600(row):
     original_default_balance = "{:<16}".format("") if pd.isna(row['OriginalDefaultBalance']) else "{:<16.0f}".format(row['OriginalDefaultBalance'])
     payment_frequency = "{:<26}".format(row['PaymentFrequency'])
     security_type ='NO' #this need to be updated based on SECTYPE table
-    past_due_balance= "{:<16.0f}".format(row['PastDueBalance'])
+    past_due_balance="{:<16}".format("0") if pd.isna(row['PastDueBalance']) else "{:<16.0f}".format(row['PastDueBalance'])
     last_payment_date = "{:<16}".format("") if pd.isna(row['LastPaymentDate']) else "{:<16}".format(row['LastPaymentDate'])
     expiry_date = "{:<8}".format('0')
     product_status = str(row['ProductStatus']) #PRODSTATUS A for active , C closed , D for Default

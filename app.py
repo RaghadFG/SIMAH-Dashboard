@@ -321,6 +321,7 @@ def func(n_clicks,Flag,error_dff,dff):
             full_df =full_df[full_df['AccountNumber'].isin(df['AccountNumber'])]
             #Unique clients 
             clients =full_df.drop_duplicates(subset=['Client Code'])
+            clients = clients.replace({"Legal Type": legal_type_mapping})
         full_df=get_preprocessing(full_df)
 
         
@@ -396,5 +397,5 @@ def funcc(n_clicks):
 
 
 if __name__ == '__main__':
-    #app.run_server(host="0.0.0.0",port=8000,debug=True)
-    app.run_server(debug=True)
+    app.run_server(host="0.0.0.0",port=8000,debug=True)
+    #app.run_server(debug=True)
